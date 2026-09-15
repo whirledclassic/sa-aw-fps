@@ -1,0 +1,34 @@
+# Compiled CLEO
+*.cs
+*.cm
+*.s
+cleo/*.cs
+
+# Local game
+gta_sa.exe
+*.img
+*.ide
+*.ipl
+*.dat
+*.ifp
+*.txd
+*.dff
+modloader/
+_gta/
+
+# Tools
+Sanny Builder*/
+.sanny/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+__pycache__/
+*.pyc
+
+# Packed zips we regenerate
+dist/
+*.zip
