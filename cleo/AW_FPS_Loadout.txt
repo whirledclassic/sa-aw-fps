@@ -1,0 +1,97 @@
+{$CLEO .cs}
+// SA · AW FPS  —  Loadout: three exo classes, key 8 / 9 / 0
+// Compile: Sanny Builder, GTA SA → CLEO\AW_FPS_Loadout.cs
+//
+// 8  ASSAULT   M4 + Deagle
+// 9  HEAVY     Shotgun + RPG + extra health
+// 0  SPECIALIST Sniper + SMG
+//
+// These are vanilla SA weapon IDs. Swap IDs if you installed replacements.
+
+0000: NOP
+
+int 0@
+int 1@
+
+0@ = 1          // current class 1=assault 2=heavy 3=spec
+1@ = 0          // key latch
+
+while true
+    wait 0
+
+    if
+        0256:   player $PLAYER_CHAR defined
+    then
+        if
+            044B:   actor $PLAYER_ACTOR on_foot
+        then
+            if
+                0AB0:   key_pressed 0x38    // 8
+            then
+                if
+                    1@ == 0
+                then
+                    gosub @give_assault
+                    1@ = 1
+                end
+            else
+                if
+                    0AB0:   key_pressed 0x39    // 9
+                then
+                    if
+                        1@ == 0
+                    then
+                        gosub @give_heavy
+                        1@ = 1
+                    end
+                else
+                    if
+                        0AB0:   key_pressed 0x30    // 0
+                    then
+                        if
+                            1@ == 0
+                        then
+                            gosub @give_spec
+                            1@ = 1
+                        end
+                    else
+                        1@ = 0
+                    end
+                end
+            end
+        end
+    end
+end
+
+:give_assault
+0@ = 1
+0555: remove_weapon_from_actor $PLAYER_ACTOR
+01B2: give_actor $PLAYER_ACTOR weapon 31 ammo 300    // M4
+01B2: give_actor $PLAYER_ACTOR weapon 24 ammo 70     // Deagle
+01B2: give_actor $PLAYER_ACTOR weapon 16 ammo 3      // grenade
+01B9: set_actor $PLAYER_ACTOR armed_weapon_to 31
+0223: set_actor $PLAYER_ACTOR health_to 100
+0ACA: show_text_box "CLASS  ASSAULT"
+return
+
+:give_heavy
+0@ = 2
+0555: remove_weapon_from_actor $PLAYER_ACTOR
+01B2: give_actor $PLAYER_ACTOR weapon 25 ammo 40     // shotgun
+01B2: give_actor $PLAYER_ACTOR weapon 35 ammo 4      // RPG
+01B2: give_actor $PLAYER_ACTOR weapon 16 ammo 5
+01B9: set_actor $PLAYER_ACTOR armed_weapon_to 25
+0223: set_actor $PLAYER_ACTOR health_to 150
+0ACA: show_text_box "CLASS  HEAVY"
+return
+
+:give_spec
+0@ = 3
+0555: remove_weapon_from_actor $PLAYER_ACTOR
+01B2: give_actor $PLAYER_ACTOR weapon 34 ammo 30     // sniper
+01B2: give_actor $PLAYER_ACTOR weapon 29 ammo 200    // MP5
+01B2: give_actor $PLAYER_ACTOR weapon 17 ammo 4      // teargas as tactical stand-in
+01B9: set_actor $PLAYER_ACTOR armed_weapon_to 34
+0223: set_actor $PLAYER_ACTOR health_to 80
+0ACA: show_text_box "CLASS  SPECIALIST"
+return

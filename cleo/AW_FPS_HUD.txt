@@ -1,0 +1,61 @@
+{$CLEO .cs}
+// SA · AW FPS  —  HUD: crosshair, exo pips, ammo, tiny compass bar
+// Compile: Sanny Builder, GTA SA → CLEO\AW_FPS_HUD.cs
+
+0000: NOP
+
+int 0@
+int 1@
+int 2@
+int 7@
+
+0@ = 1
+1@ = 0
+
+while true
+    wait 0
+
+    if
+        0256:   player $PLAYER_CHAR defined
+    then
+        if
+            044B:   actor $PLAYER_ACTOR on_foot
+        then
+            1@ = 0
+            if or
+                00E1:   player 0 pressed_key 6
+                0AB0:   key_pressed 0x02
+            then
+                1@ = 1
+            end
+
+            03F0: enable_text_draw 1
+
+            if
+                1@ == 0
+            then
+                038E: draw_box_position 320.0 224.0 size 1.0 10.0 RGBA 170 255 170 210
+                038E: draw_box_position 320.0 256.0 size 1.0 10.0 RGBA 170 255 170 210
+                038E: draw_box_position 304.0 240.0 size 10.0 1.0 RGBA 170 255 170 210
+                038E: draw_box_position 336.0 240.0 size 10.0 1.0 RGBA 170 255 170 210
+                038E: draw_box_position 320.0 240.0 size 2.0 2.0 RGBA 170 255 170 230
+            else
+                038E: draw_box_position 320.0 240.0 size 2.0 2.0 RGBA 200 255 200 255
+                038E: draw_box_position 312.0 240.0 size 5.0 1.0 RGBA 200 255 200 200
+                038E: draw_box_position 328.0 240.0 size 5.0 1.0 RGBA 200 255 200 200
+            end
+
+            038E: draw_box_position 300.0 430.0 size 18.0 5.0 RGBA 20 40 20 160
+            038E: draw_box_position 322.0 430.0 size 18.0 5.0 RGBA 20 40 20 160
+            038E: draw_box_position 300.0 430.0 size 18.0 5.0 RGBA 170 255 170 200
+            038E: draw_box_position 322.0 430.0 size 18.0 5.0 RGBA 170 255 170 200
+
+            038E: draw_box_position 80.0 430.0 size 104.0 8.0 RGBA 10 20 10 180
+            038E: draw_box_position 80.0 430.0 size 80.0 6.0 RGBA 170 255 170 210
+            038E: draw_box_position 560.0 430.0 size 50.0 8.0 RGBA 10 20 10 180
+            038E: draw_box_position 320.0 28.0 size 220.0 3.0 RGBA 170 255 170 80
+            0172: 7@ = actor $PLAYER_ACTOR z_angle
+            038E: draw_box_position 320.0 28.0 size 4.0 8.0 RGBA 170 255 170 230
+        end
+    end
+end
