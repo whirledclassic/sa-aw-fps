@@ -15,11 +15,12 @@ int 6@
 int 7@
 int 8@
 int 9@
+int 13@
 float 10@
 float 11@
 float 12@
 
-0@ = 0          // score
+0@ = 0          // unused score bucket (toasts still say +50)
 1@ = 0          // streak count
 2@ = 0          // streak timeout ms
 3@ = 0          // hitmarker frames
@@ -75,19 +76,19 @@ while true
                 if
                     8118:   not actor 7@ dead
                 then
-                    0226: 0@ = actor 7@ health
+                    0226: 13@ = actor 7@ health
                     if
                         4@ == 7@
                     then
                         if
-                            0@ < 5@
+                            13@ < 5@
                         then
                             if
                                 6@ == 1
                             then
                                 3@ = 8
                                 if
-                                    0@ <= 1
+                                    13@ <= 1
                                 then
                                     if
                                         803B:   not  7@ == 9@
@@ -100,7 +101,7 @@ while true
                         end
                     end
                     4@ = 7@
-                    5@ = 0@
+                    5@ = 13@
                 else
                     if
                         6@ == 1
