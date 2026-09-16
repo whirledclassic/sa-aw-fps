@@ -1,23 +1,48 @@
 {$CLEO .cs}
 // SA · AW FPS  —  Loadout: three exo classes, key 8 / 9 / 0
 // Compile: Sanny Builder, GTA SA → CLEO\AW_FPS_Loadout.cs
-//
-// 8  ASSAULT    M4 + Deagle + grenade
-// 9  HEAVY      Shotgun + RPG + extra health
-// 0  SPECIALIST Sniper + MP5 + smoke stand-in
-//
-// 0555 needs a weapon id on stock Sanny. We strip known class guns only.
+// F4 disables class swaps so you keep mission guns when the pack is off.
+// Pressing the same class again is a no-op (does not strip ammo).
 
 0000: NOP
 
 int 0@
 int 1@
+int 2@
+int 3@
 
-0@ = 1
+0@ = 0
 1@ = 0
+2@ = 1
+3@ = 0
 
 while true
     wait 0
+
+    if
+        0AB0:   key_pressed 0x73
+    then
+        if
+            3@ == 0
+        then
+            if
+                2@ == 1
+            then
+                2@ = 0
+            else
+                2@ = 1
+            end
+        end
+        3@ = 1
+    else
+        3@ = 0
+    end
+
+    if
+        2@ == 0
+    then
+        jump @load_idle
+    end
 
     if
         0256:   player $PLAYER_CHAR defined
@@ -32,7 +57,11 @@ while true
                 if
                     1@ == 0
                 then
-                    gosub @give_assault
+                    if
+                        8039:   not  0@ == 1
+                    then
+                        gosub @give_assault
+                    end
                     1@ = 1
                 end
             else
@@ -42,7 +71,11 @@ while true
                     if
                         1@ == 0
                     then
-                        gosub @give_heavy
+                        if
+                            8039:   not  0@ == 2
+                        then
+                            gosub @give_heavy
+                        end
                         1@ = 1
                     end
                 else
@@ -52,7 +85,11 @@ while true
                         if
                             1@ == 0
                         then
-                            gosub @give_spec
+                            if
+                                8039:   not  0@ == 3
+                            then
+                                gosub @give_spec
+                            end
                             1@ = 1
                         end
                     else
@@ -62,6 +99,8 @@ while true
             end
         end
     end
+
+:load_idle
 end
 
 :strip_class_guns

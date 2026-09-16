@@ -1,15 +1,47 @@
 {$CLEO .cs}
 // SA · AW FPS  —  HUD: crosshair, exo pips, heading pip
 // Compile: Sanny Builder, GTA SA → CLEO\AW_FPS_HUD.cs
+// F4 hides the overlay so it does not sit on the GroveLink phone or cutscenes.
 
 0000: NOP
 
+int 0@
 int 1@
+int 2@
 float 7@
 float 8@
 
+0@ = 1
+2@ = 0
+
 while true
     wait 0
+
+    if
+        0AB0:   key_pressed 0x73
+    then
+        if
+            2@ == 0
+        then
+            if
+                0@ == 1
+            then
+                0@ = 0
+            else
+                0@ = 1
+            end
+        end
+        2@ = 1
+    else
+        2@ = 0
+    end
+
+    if
+        0@ == 0
+    then
+        03F0: enable_text_draw 0
+        jump @hud_idle
+    end
 
     if
         0256:   player $PLAYER_CHAR defined
@@ -68,6 +100,10 @@ while true
                 8@ = 420.0
             end
             038E: draw_box_position 8@ 28.0 size 4.0 8.0 RGBA 170 255 170 230
+        else
+            03F0: enable_text_draw 0
         end
     end
+
+:hud_idle
 end
