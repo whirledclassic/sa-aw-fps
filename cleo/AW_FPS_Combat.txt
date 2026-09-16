@@ -1,7 +1,8 @@
 {$CLEO .cs}
-// SA · AW FPS  —  Combat: hit detect, hitmarker flash, kill score, streak rewards
+// SA · AW FPS  —  Combat: hitmarker, medals, streak rewards
 // Compile: Sanny Builder, GTA SA → CLEO\AW_FPS_Combat.cs
-// Nearby peds whose health dropped while the player is firing.
+// Stock CLEO 4.4: 0AE1 scan instead of CLEO+ 0AB3.
+// F4 matches Core / HUD so medals stop when the pack is off.
 
 0000: NOP
 
@@ -14,26 +15,59 @@ int 5@
 int 6@
 int 7@
 int 8@
-int 10@
-int 11@
-int 12@
+int 9@
+int 13@
+int 14@
+int 15@
+float 10@
+float 11@
+float 12@
 
-0@ = 0
+0@ = 1
 1@ = 0
 2@ = 0
 3@ = 0
 4@ = 0
 5@ = 0
 6@ = 0
+9@ = 0
+14@ = 0
 
 while true
     wait 0
 
     if
-        0256:   player $PLAYER_CHAR defined
+        0AB0:   key_pressed 0x73
     then
         if
+            14@ == 0
+        then
+            if
+                0@ == 1
+            then
+                0@ = 0
+            else
+                0@ = 1
+            end
+        end
+        14@ = 1
+    else
+        14@ = 0
+    end
+
+    if
+        0@ == 0
+    then
+        03F0: enable_text_draw 0
+        jump @combat_idle
+    end
+
+    if
+        0256:   player $PLAYER_CHAR defined
+    then
+        if and
             044B:   actor $PLAYER_ACTOR on_foot
+            03EE:   player $PLAYER_CHAR controllable
         then
             6@ = 0
             if or
@@ -57,48 +91,68 @@ while true
             end
 
             04C4: store_coords_from_actor $PLAYER_ACTOR into 10@ 11@ 12@
-            0AB3: get_actor_in_sphere 10@ 11@ 12@ radius 12.0 handle_as 7@
 
+            8@ = 0
+            :scan_actors
+            0AE1: 7@ = random_actor_near_point 10@ 11@ 12@ in_radius 16.0 find_next 8@ pass_deads 1
             if
-                7@ > 0
+                7@ == -1
+            then
+                jump @scan_done
+            end
+            if
+                803B:   not  7@ == $PLAYER_ACTOR
             then
                 if
                     8118:   not actor 7@ dead
                 then
-                    0226: 8@ = actor 7@ health
+                    0226: 13@ = actor 7@ health
                     if
                         4@ == 7@
                     then
                         if
-                            8@ < 5@
+                            13@ < 5@
                         then
                             if
                                 6@ == 1
                             then
                                 3@ = 8
                                 if
-                                    8@ <= 0
+                                    13@ <= 1
                                 then
-                                    gosub @register_kill
+                                    if
+                                        803B:   not  7@ == 9@
+                                    then
+                                        9@ = 7@
+                                        gosub @register_kill
+                                    end
                                 end
                             end
                         end
                     end
                     4@ = 7@
-                    5@ = 8@
+                    5@ = 13@
                 else
+                    if
+                        6@ == 1
+                    then
+                        if
+                            803B:   not  7@ == 9@
+                        then
+                            9@ = 7@
+                            gosub @register_kill
+                        end
+                    end
                     if
                         4@ == 7@
                     then
-                        if
-                            6@ == 1
-                        then
-                            gosub @register_kill
-                        end
                         4@ = 0
                     end
                 end
             end
+            8@ = 1
+            jump @scan_actors
+            :scan_done
 
             if
                 3@ > 0
@@ -109,14 +163,17 @@ while true
                 038E: draw_box_position 320.0 222.0 size 2.0 6.0 RGBA 255 255 255 220
                 038E: draw_box_position 320.0 226.0 size 2.0 6.0 RGBA 255 255 255 220
             end
+        else
+            03F0: enable_text_draw 0
         end
     end
+
+:combat_idle
 end
 
 :register_kill
 1@ += 1
 2@ = 8000
-0@ += 50
 3@ = 10
 0ACA: show_text_box "ELIMINATED  +50"
 

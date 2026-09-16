@@ -1,7 +1,10 @@
 {$CLEO .cs}
 // SA · AW FPS  —  Core: exo boost, dash, slide
-// Compile with Sanny Builder 3/4, mode: GTA SA, output: CLEO\AW_FPS_Core.cs
-// Requires: CLEO 4+, player on foot. Works WITH a first-person camera plugin.
+// Compile: Sanny Builder 3/4, mode GTA SA → CLEO\AW_FPS_Core.cs
+// Stock CLEO 4.4 opcodes only. Works WITH a first-person camera plugin.
+//
+// 0407 offsets are X=right, Y=forward, Z=up.
+// Toggle is F4 — F6 belongs to the companion switcher in gta-sa-win7-mods.
 
 0000: NOP
 
@@ -21,34 +24,38 @@ int 12@
 int 13@
 int 14@
 int 15@
-int 16@
-int 17@
-int 18@
-int 19@
-int 20@
+float 16@
+float 17@
+float 18@
+float 19@
+float 20@
+float 22@
+float 23@
+float 24@
 int 21@
-int 22@
-int 23@
-int 24@
 int 25@
 int 26@
+int 27@
+int 28@
 
-0@ = 1
-1@ = 2
-2@ = 2
-3@ = 0
-4@ = 0
-5@ = 0
-6@ = 0
-7@ = 0
-8@ = 0
-9@ = 0
-10@ = 0
-11@ = 0
-12@ = 0
-13@ = 0
-14@ = 0
-15@ = 0
+0@ = 1          // pack enabled
+1@ = 2          // boost charges
+2@ = 2          // max charges
+3@ = 0          // recharge accumulator (ms)
+4@ = 0          // hover ticks left
+5@ = 0          // dash cooldown ms
+6@ = 0          // last W tap clock
+7@ = 0          // last A tap clock
+8@ = 0          // last D tap clock
+9@ = 0          // slide ms left
+10@ = 0         // jump latch
+11@ = 0         // W latch
+12@ = 0         // A latch
+13@ = 0         // D latch
+14@ = 0         // F4 latch
+15@ = 0         // clock
+26@ = 0         // last S tap clock
+27@ = 0         // S latch
 
 while true
     wait 0
@@ -57,11 +64,11 @@ while true
     if
         0ADC:   test_cheat "AWFPS"
     then
-        0ACA: show_text_box "SA-AW FPS  charges &1  enabled &0"
+        0ACA: show_text_box "SA-AW FPS  F4 toggle  charges &1"
     end
 
     if
-        0AB0:   key_pressed 0x75
+        0AB0:   key_pressed 0x73
     then
         if
             14@ == 0
@@ -70,10 +77,10 @@ while true
                 0@ == 1
             then
                 0@ = 0
-                0ACA: show_text_box "SA-AW exo OFF"
+                0ACA: show_text_box "SA-AW pack OFF"
             else
                 0@ = 1
-                0ACA: show_text_box "SA-AW exo ON"
+                0ACA: show_text_box "SA-AW pack ON"
             end
         end
         14@ = 1
@@ -93,99 +100,106 @@ while true
         if
             044B:   actor $PLAYER_ACTOR on_foot
         then
-            04C4: store_coords_from_actor $PLAYER_ACTOR into 16@ 17@ 18@
-            02CE: get_ground_z_for_3d_coord 16@ 17@ 18@ store_to 19@
-            20@ = 18@
-            20@ -= 19@
-
             if
-                20@ < 0.65
+                03EE:   player $PLAYER_CHAR controllable
             then
-                if
-                    1@ < 2@
-                then
-                    3@ += 16
-                    if
-                        3@ > 2800
-                    then
-                        1@ += 1
-                        3@ = 0
-                    end
-                end
-                4@ = 0
-            end
+                04C4: store_coords_from_actor $PLAYER_ACTOR into 16@ 17@ 18@
+                02CE: get_ground_z_for_3d_coord 16@ 17@ 18@ store_to 19@
+                20@ = 18@
+                20@ -= 19@
 
-            21@ = 0
-            if or
-                0AB0:   key_pressed 0x20
-                00E1:   player 0 pressed_key 14
-            then
-                21@ = 1
-            end
-
-            if
-                21@ == 1
-            then
                 if
-                    10@ == 0
+                    20@ < 0.65
                 then
                     if
-                        20@ > 0.80
+                        1@ < 2@
                     then
+                        3@ += 16
                         if
-                            1@ > 0
+                            3@ > 2800
                         then
-                            1@ -= 1
-                            4@ = 18
-                            18@ += 1.15
-                            00A1: put_actor $PLAYER_ACTOR at 16@ 17@ 18@
-                            0ACA: show_text_box "EXO BOOST"
+                            1@ += 1
+                            3@ = 0
                         end
                     end
+                    4@ = 0
                 end
-                10@ = 1
-            else
-                10@ = 0
-            end
 
-            if
-                4@ > 0
-            then
-                4@ -= 1
-                04C4: store_coords_from_actor $PLAYER_ACTOR into 16@ 17@ 18@
-                18@ += 0.085
-                00A1: put_actor $PLAYER_ACTOR at 16@ 17@ 18@
-            end
+                21@ = 0
+                if or
+                    0AB0:   key_pressed 0x20
+                    00E1:   player 0 pressed_key 14
+                then
+                    21@ = 1
+                end
 
-            if
-                5@ > 0
-            then
-                5@ -= 16
-            end
-
-            gosub @dash_w
-            gosub @dash_a
-            gosub @dash_d
-
-            if
-                9@ > 0
-            then
-                9@ -= 16
-                0407: store_coords_to 22@ 23@ 24@ from_actor $PLAYER_ACTOR with_offset 0.28 0.0 0.0
-                00A1: put_actor $PLAYER_ACTOR at 22@ 23@ 24@
-            end
-
-            if
-                0AB0:   key_pressed 0x43
-            then
                 if
-                    9@ == 0
+                    21@ == 1
                 then
                     if
-                        20@ < 0.70
+                        10@ == 0
                     then
-                        9@ = 700
-                        0ACA: show_text_box "SLIDE"
+                        if
+                            20@ > 0.80
+                        then
+                            if
+                                1@ > 0
+                            then
+                                1@ -= 1
+                                4@ = 14
+                                0407: store_coords_to 22@ 23@ 24@ from_actor $PLAYER_ACTOR with_offset 0.0 0.35 1.05
+                                00A1: put_actor $PLAYER_ACTOR at 22@ 23@ 24@
+                            end
+                        end
+                    end
+                    10@ = 1
+                else
+                    10@ = 0
+                end
+
+                if
+                    4@ > 0
+                then
+                    4@ -= 1
+                    0407: store_coords_to 22@ 23@ 24@ from_actor $PLAYER_ACTOR with_offset 0.0 0.12 0.07
+                    00A1: put_actor $PLAYER_ACTOR at 22@ 23@ 24@
+                end
+
+                if
+                    5@ > 0
+                then
+                    5@ -= 16
+                end
+
+                gosub @dash_w
+                gosub @dash_a
+                gosub @dash_d
+                gosub @dash_s
+
+                if
+                    9@ > 0
+                then
+                    9@ -= 16
+                    0407: store_coords_to 22@ 23@ 24@ from_actor $PLAYER_ACTOR with_offset 0.0 0.32 0.0
+                    04C4: store_coords_from_actor $PLAYER_ACTOR into 16@ 17@ 18@
+                    00A1: put_actor $PLAYER_ACTOR at 22@ 23@ 18@
+                end
+
+                if
+                    0AB0:   key_pressed 0x43
+                then
+                    if
+                        9@ == 0
+                    then
+                        if
+                            20@ < 0.70
+                        then
+                            if
+                                0AB0:   key_pressed 0x57
+                            then
+                                9@ = 520
+                            end
+                        end
                     end
                 end
             end
@@ -273,26 +287,56 @@ else
 end
 return
 
+:dash_s
+if
+    0AB0:   key_pressed 0x53
+then
+    if
+        27@ == 0
+    then
+        25@ = 15@
+        25@ -= 26@
+        if
+            25@ < 280
+        then
+            if
+                5@ <= 0
+            then
+                gosub @do_dash_back
+            end
+        end
+        26@ = 15@
+    end
+    27@ = 1
+else
+    27@ = 0
+end
+return
+
 :do_dash_fwd
 5@ = 1400
 04C4: store_coords_from_actor $PLAYER_ACTOR into 16@ 17@ 18@
-0407: store_coords_to 22@ 23@ 24@ from_actor $PLAYER_ACTOR with_offset 2.1 0.0 0.0
+0407: store_coords_to 22@ 23@ 24@ from_actor $PLAYER_ACTOR with_offset 0.0 1.45 0.0
 00A1: put_actor $PLAYER_ACTOR at 22@ 23@ 18@
-0ACA: show_text_box "EXO DASH"
 return
 
 :do_dash_left
 5@ = 1400
 04C4: store_coords_from_actor $PLAYER_ACTOR into 16@ 17@ 18@
-0407: store_coords_to 22@ 23@ 24@ from_actor $PLAYER_ACTOR with_offset 0.0 -2.1 0.0
+0407: store_coords_to 22@ 23@ 24@ from_actor $PLAYER_ACTOR with_offset -1.45 0.0 0.0
 00A1: put_actor $PLAYER_ACTOR at 22@ 23@ 18@
-0ACA: show_text_box "EXO DASH"
 return
 
 :do_dash_right
 5@ = 1400
 04C4: store_coords_from_actor $PLAYER_ACTOR into 16@ 17@ 18@
-0407: store_coords_to 22@ 23@ 24@ from_actor $PLAYER_ACTOR with_offset 0.0 2.1 0.0
+0407: store_coords_to 22@ 23@ 24@ from_actor $PLAYER_ACTOR with_offset 1.45 0.0 0.0
 00A1: put_actor $PLAYER_ACTOR at 22@ 23@ 18@
-0ACA: show_text_box "EXO DASH"
+return
+
+:do_dash_back
+5@ = 1400
+04C4: store_coords_from_actor $PLAYER_ACTOR into 16@ 17@ 18@
+0407: store_coords_to 22@ 23@ 24@ from_actor $PLAYER_ACTOR with_offset 0.0 -1.45 0.0
+00A1: put_actor $PLAYER_ACTOR at 22@ 23@ 18@
 return
