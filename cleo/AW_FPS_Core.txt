@@ -3,7 +3,8 @@
 // Compile: Sanny Builder 3/4, mode GTA SA → CLEO\AW_FPS_Core.cs
 // Stock CLEO 4.4 opcodes only. Works WITH a first-person camera plugin.
 //
-// 0407 offsets are X=right, Y=forward, Z=up. Dash used to shove sideways.
+// 0407 offsets are X=right, Y=forward, Z=up.
+// Toggle is F4 — F6 belongs to the companion switcher in gta-sa-win7-mods.
 
 0000: NOP
 
@@ -33,6 +34,9 @@ float 23@
 float 24@
 int 21@
 int 25@
+int 26@
+int 27@
+int 28@
 
 0@ = 1          // pack enabled
 1@ = 2          // boost charges
@@ -48,8 +52,10 @@ int 25@
 11@ = 0         // W latch
 12@ = 0         // A latch
 13@ = 0         // D latch
-14@ = 0         // F6 latch
+14@ = 0         // F4 latch
 15@ = 0         // clock
+26@ = 0         // last S tap clock
+27@ = 0         // S latch
 
 while true
     wait 0
@@ -58,11 +64,11 @@ while true
     if
         0ADC:   test_cheat "AWFPS"
     then
-        0ACA: show_text_box "SA-AW FPS  charges &1  enabled &0"
+        0ACA: show_text_box "SA-AW FPS  F4 toggle  charges &1"
     end
 
     if
-        0AB0:   key_pressed 0x75
+        0AB0:   key_pressed 0x73
     then
         if
             14@ == 0
@@ -71,10 +77,10 @@ while true
                 0@ == 1
             then
                 0@ = 0
-                0ACA: show_text_box "SA-AW exo OFF"
+                0ACA: show_text_box "SA-AW pack OFF"
             else
                 0@ = 1
-                0ACA: show_text_box "SA-AW exo ON"
+                0ACA: show_text_box "SA-AW pack ON"
             end
         end
         14@ = 1
@@ -168,6 +174,7 @@ while true
                 gosub @dash_w
                 gosub @dash_a
                 gosub @dash_d
+                gosub @dash_s
 
                 if
                     9@ > 0
@@ -187,7 +194,11 @@ while true
                         if
                             20@ < 0.70
                         then
-                            9@ = 520
+                            if
+                                0AB0:   key_pressed 0x57
+                            then
+                                9@ = 520
+                            end
                         end
                     end
                 end
@@ -276,6 +287,32 @@ else
 end
 return
 
+:dash_s
+if
+    0AB0:   key_pressed 0x53
+then
+    if
+        27@ == 0
+    then
+        25@ = 15@
+        25@ -= 26@
+        if
+            25@ < 280
+        then
+            if
+                5@ <= 0
+            then
+                gosub @do_dash_back
+            end
+        end
+        26@ = 15@
+    end
+    27@ = 1
+else
+    27@ = 0
+end
+return
+
 :do_dash_fwd
 5@ = 1400
 04C4: store_coords_from_actor $PLAYER_ACTOR into 16@ 17@ 18@
@@ -294,5 +331,12 @@ return
 5@ = 1400
 04C4: store_coords_from_actor $PLAYER_ACTOR into 16@ 17@ 18@
 0407: store_coords_to 22@ 23@ 24@ from_actor $PLAYER_ACTOR with_offset 1.45 0.0 0.0
+00A1: put_actor $PLAYER_ACTOR at 22@ 23@ 18@
+return
+
+:do_dash_back
+5@ = 1400
+04C4: store_coords_from_actor $PLAYER_ACTOR into 16@ 17@ 18@
+0407: store_coords_to 22@ 23@ 24@ from_actor $PLAYER_ACTOR with_offset 0.0 -1.45 0.0
 00A1: put_actor $PLAYER_ACTOR at 22@ 23@ 18@
 return
