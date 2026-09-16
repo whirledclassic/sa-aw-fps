@@ -2,6 +2,7 @@
 // SA · AW FPS  —  Combat: hitmarker, medals, streak rewards
 // Compile: Sanny Builder, GTA SA → CLEO\AW_FPS_Combat.cs
 // Stock CLEO 4.4: 0AE1 scan instead of CLEO+ 0AB3.
+// F4 matches Core / HUD so medals stop when the pack is off.
 
 0000: NOP
 
@@ -16,21 +17,50 @@ int 7@
 int 8@
 int 9@
 int 13@
+int 14@
+int 15@
 float 10@
 float 11@
 float 12@
 
-0@ = 0          // unused score bucket (toasts still say +50)
-1@ = 0          // streak count
-2@ = 0          // streak timeout ms
-3@ = 0          // hitmarker frames
-4@ = 0          // tracked actor
-5@ = 0          // tracked health
-6@ = 0          // firing
-9@ = 0          // last killed handle (debounce)
+0@ = 1
+1@ = 0
+2@ = 0
+3@ = 0
+4@ = 0
+5@ = 0
+6@ = 0
+9@ = 0
+14@ = 0
 
 while true
     wait 0
+
+    if
+        0AB0:   key_pressed 0x73
+    then
+        if
+            14@ == 0
+        then
+            if
+                0@ == 1
+            then
+                0@ = 0
+            else
+                0@ = 1
+            end
+        end
+        14@ = 1
+    else
+        14@ = 0
+    end
+
+    if
+        0@ == 0
+    then
+        03F0: enable_text_draw 0
+        jump @combat_idle
+    end
 
     if
         0256:   player $PLAYER_CHAR defined
@@ -133,8 +163,12 @@ while true
                 038E: draw_box_position 320.0 222.0 size 2.0 6.0 RGBA 255 255 255 220
                 038E: draw_box_position 320.0 226.0 size 2.0 6.0 RGBA 255 255 255 220
             end
+        else
+            03F0: enable_text_draw 0
         end
     end
+
+:combat_idle
 end
 
 :register_kill
