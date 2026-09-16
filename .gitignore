@@ -4,6 +4,9 @@
 *.s
 cleo/*.cs
 
+# Local game path remembered by COMPILE.bat
+GTA_DIR.txt
+
 # Local game
 gta_sa.exe
 *.img
